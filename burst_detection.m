@@ -1,29 +1,47 @@
 
+%% Loading data
 
-rw_root = '\\WS4\Data\People\Tsang-Kai\RW\Sheldon\2012-08-06_16-29-50';
-vr_root = '\\WS4\Data\People\Tsang-Kai\VR\Sheldon\2012-08-06_14-59-38';
+
+date = 16;
+[rw_root, vr_root] = Sheldon(date);
 
 rw_data = loadData(rw_root);
-vr_data = loadData(vr_root);
+vr_data = loadData(vr_root); % data in ms now
 
-[rw_data, vr_data] = normalizeTwoData(rw_data, vr_data);
+rw_unit_data = loadUnitData(rw_root);
+vr_unit_data = loadUnitData(vr_root);
 
 
-bin_size = 40;  
+%% TT statistics
+% in order to determine whether is active
+
+bin_size = 40;  %ms
 
 rw_data_bin = ms2Bin(rw_data, bin_size);
 vr_data_bin = ms2Bin(vr_data, bin_size);
 
-plotDataInHisto(rw_data_bin, vr_data_bin, '08_06');
-
-%% Detect burst
-
-% go through the sliding window with width = 40ms
-spike_threshold = 35;
-burst_event = detectBurstEvent(rw_data, bin_size, spike_threshold);
-%%
+rw_bin_spike_thrhld = mean(rw_data_bin.spike,2)+ 3*std(rw_data_bin.spike')';
+vr_bin_spike_thrhld = mean(vr_data_bin.spike,2)+ 3*std(vr_data_bin.spike')';
 
 
-%% Test for Basic Data
+%% Sliding windows
+speed_thrhld = 5; % cm/s
+location_thrhld = 5; % cm
+window_size = 40; % ms
 
-plotTimeInterval(722000, 738000, rw_data, burst_event)
+rw_active_ms = sliding_window(rw_data, window_size, speed_thrhld, location_thrhld, rw_bin_spike_thrhld);
+vr_active_ms = sliding_window(vr_data, window_size, speed_thrhld, location_thrhld, vr_bin_spike_thrhld);
+
+
+%% Candidate event
+window_gap = 40; % ms
+window_max = 400; % ms
+
+rw_event = find_candidate_event(rw_active_ms, window_size, window_gap, window_max);
+vr_event = find_candidate_event(vr_active_ms, window_size, window_gap, window_max);
+
+save('rw_event.mat','rw_event');
+save('vr_event.mat','vr_event');  
+
+dlmwrite('rw_event.csv', rw_event, 'precision', '%i'); % output csv files that can be used beyond Matlab
+dlmwrite('vr_event.csv', vr_event, 'precision', '%i');
