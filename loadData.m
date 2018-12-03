@@ -1,11 +1,16 @@
 function outputData = loadData(Root)
 
+if exist('tt_CA','var') == 0
+    run('Basic_Sheldon.m');
+end
+
+
 Basic_file = load(fullfile(Root, 'bdata.mat'));
 Time = idivide(uint64(Basic_file.Time), uint64(1000));   % ms
 Position = Basic_file.Position;
 
 %% Speed
-li_position_ms = interp1(double(Time),double(Position),double(Time(1):Time(end)));
+li_position_ms = interp1(double(Time),double(Position), double(Time(1):Time(end)));
 
 sigma = 20;
 sigma3 = 3*sigma;
@@ -23,7 +28,7 @@ for i=1+window_size:Time(end)-Time(1)+1-window_size
 end
 
 %% Spike
-tt_CA = [2:5,7:9,14,16:21];                         % should check TTadjustment
+%tt_CA = [2:5,7:9,14,16:21];                         % should check TTadjustment
                                                     % these are for Sheldon
 
 
@@ -49,5 +54,5 @@ end
 %% Output finalization
 outputData.spike = spike_ms;
 outputData.speed = abs(speed_ms);
-
+outputData.position = s_position_ms;
 end
