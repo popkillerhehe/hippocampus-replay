@@ -39,7 +39,13 @@ for tt = 1:size(tt_CA,2)
     data_name = sprintf('TT%d.spike', tt_CA(tt));
     spikeset = loadDotspike(fullfile(Root, data_name));
     
-    spike_times_ms = idivide(uint64(spikeset.primary.times), uint64(1000));
+    
+    
+    all_waveform = mean(spikeset.waveforms,2);
+    waveform_reasonable_idx = (max(all_waveform) - mean(all_waveform)) > (mean(all_waveform) - min(all_waveform));
+    waveform_idx = reshape(waveform_reasonable_idx, size(waveform_reasonable_idx,3), 1);
+    
+    spike_times_ms = idivide(uint64(spikeset.primary.times(waveform_idx)), uint64(1000));
     
     for i = 1:size(spike_times_ms,2)
         if spike_times_ms(i) >= Time(1)
